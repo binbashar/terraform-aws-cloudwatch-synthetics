@@ -1,9 +1,14 @@
 #Module      : LABEL
 #Description : Terraform label module variables.
-variable "name" {
+variable "name_prefix" {
   type        = string
-  default     = ""
   description = "Name  (e.g. `app` or `cluster`)."
+}
+
+variable "topic_name_suffix" {
+  default     = "canary-topic"
+  type        = string
+  description = "The name for the SNS Topic suffix (will be name-topic_name_suffix)"
 }
 
 variable "repository" {
@@ -70,4 +75,9 @@ variable "security_group_ids" {
   default     = null
   type        = list(string)
   description = "IDs of the security groups for this canary"
+}
+
+variable "tags" {
+  type        = map(string)
+  description = "The tags"
 }

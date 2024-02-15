@@ -10,11 +10,13 @@ module "labels" {
   source  = "clouddrove/labels/aws"
   version = "1.3.0"
 
-  name        = var.name
+  name        = var.name_prefix
   environment = var.environment
   repository  = var.repository
   managedby   = var.managedby
   label_order = var.label_order
+
+  extra_tags        = var.tags
 }
 
 #Module      : CLOUDWATCH SYNTHETIC CANARY 
@@ -41,7 +43,7 @@ data "archive_file" "canary_archive_file" {
 
 resource "aws_synthetics_canary" "canary" {
   for_each             = var.endpoints
-  name                 = each.key
+  name                 = "${each.key}-canary"
   artifact_s3_location = "s3://${var.s3_artifact_bucket}/${each.key}"
   execution_role_arn   = aws_iam_role.canary_role.arn
   handler              = "pageLoadBlueprint.handler"
@@ -66,7 +68,7 @@ resource "aws_synthetics_canary" "canary" {
 #Description : Terraform module creates IAM Role for Cloudwatch Synthetic canaries on AWS for monitoriing Websites.
 
 resource "aws_iam_policy" "canary_policy" {
-  name        = "canary-policy"
+  name        = "${var.name_prefix}-canary-policy"
   description = "Policy for canary"
   policy      = data.aws_iam_policy_document.canary_permissions.json
 }
@@ -143,7 +145,7 @@ data "aws_iam_policy_document" "canary_permissions" {
 }
 
 resource "aws_iam_role" "canary_role" {
-  name               = "CloudWatchSyntheticsRole"
+  name               = "${var.name_prefix}-CloudWatchSyntheticsRole"
   assume_role_policy = data.aws_iam_policy_document.canary_assume_role.json
 }
 
@@ -168,7 +170,7 @@ resource "aws_iam_role_policy_attachment" "canary_role_policy" {
 resource "aws_cloudwatch_metric_alarm" "canary_alarm" {
   for_each = var.endpoints
 
-  alarm_name          = "${each.key}-canary-alarm"
+  alarm_name          = "${var.name_prefix}-${each.key}-canary-alarm"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
   metric_name         = "Failed"
@@ -190,10 +192,11 @@ resource "aws_cloudwatch_metric_alarm" "canary_alarm" {
 }
 
 resource "aws_sns_topic" "canary_alarm" {
-  name = "dev-xcheck-api-canary-alarm"
+  name = "${var.name_prefix}-${var.topic_name_suffix}"
 }
 
 resource "aws_sns_topic_subscription" "canary_alarm" {
+  count     = var.alarm_email == null ? 0 : 1
   topic_arn = aws_sns_topic.canary_alarm.arn
   protocol  = "email"
   endpoint  = var.alarm_email
