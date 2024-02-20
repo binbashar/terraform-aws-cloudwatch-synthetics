@@ -96,6 +96,6 @@ variable "create_topic" {
 
 variable "existent_topic_arn" {
   default     = ""
-  type        = "string"
+  type        = string
   description = "The arn of the already existent topic to use if `create_topic` is `false`"
 }
