@@ -77,20 +77,30 @@ This module has a few dependencies:
 Here are some examples of how you can use this module in your inventory structure:
 ### Basic Example
 ```hcl
-  module "canaries" {
-    source                    = "clouddrove/cloudwatch-synthetics/aws"
-    version                   = "1.3.0"
-    name                      = "canary"
-    environment               = "test"
-    label_order               = ["name", "environment"]
-    schedule_expression       = "rate(5 minutes)"
-    s3_artifact_bucket        = "my-test-artifact-bucket" # must pre-exist
-    alarm_email               = "test.user@clouddrove.com" # you need to confirm this email address
-    endpoints                 = { "test-example" = { url = "https://example.com" } }
-    subnet_ids                = module.subnets.private_subnet_id
-    security_group_ids        = [module.ssh.security_group_ids]    
+  module "target-canary" {
+    source = "git::https://github.com/binbashar/terraform-aws-cloudwatch-synthetics.git?ref=FEATURE/improving-module"
+  
+    name_prefix = "canary"
+    environment = "test"
+  
+    schedule_expression = "rate(5 minutes)"
+    s3_artifact_bucket  = "my-test-artifact-bucket" # must pre-exist
+    alarm_email         = null      # an email or null value
+    endpoints           = { "target-group" = { url = "http://www.binbash.co/" } }
+    managedby           = "managedby@binbash.co"
+    repository          = "https://github.com/binbashar/terraform-aws-cloudwatch-synthetics"
+  
+    # what networks it has to work in?
+    subnet_ids                = data.terraform_remote_state.local-vpcs.outputs.private_subnets
+    security_group_ids        = [aws_security_group.target-canary-sg.id]
+  
+    tags = local.tags
+  
+    depends_on = [module.target_canary_s3_bucket, aws_security_group.target-canary-sg]
   }
 ```
+
+**Note it is using FEATURE/improving-module branch while in development.**
 
 
 
@@ -107,9 +117,9 @@ Here are some examples of how you can use this module in your inventory structur
 | environment | Environment (e.g. `prod`, `dev`, `staging`). | `string` | `""` | no |
 | existent\_topic\_arn | If create_topic is `false` this is required and is the arn of an already existent topic | `string` | n/a | no |
 | label\_order | Label order, e.g. `name`,`application`. | `list(any)` | `[]` | no |
-| managedby | ManagedBy, eg 'CloudDrove'. | `string` | `"hello@clouddrove.com"` | no |
+| managedby | ManagedBy, eg 'CloudDrove'. | `string` | `"managedby@binbash.co"` | no |
 | name | Name  (e.g. `app` or `cluster`). | `string` | `""` | no |
-| repository | Terraform current module repo | `string` | `"https://github.com/clouddrove/terraform-aws-cloudwatch-alarms"` | no |
+| repository | Terraform current module repo | `string` | `"https://github.com/binbashar/terraform-aws-cloudwatch-synthetics"` | no |
 | runtime_version | Runtime version for the lambda. | `string` | `syn-nodejs-puppeteer-6.2` | no |
 | s3\_artifact\_bucket | Location in Amazon S3 where Synthetics stores artifacts from the test runs of this canary | `string` | n/a | yes |
 | schedule\_expression | Expression defining how often the canary runs | `string` | n/a | yes |

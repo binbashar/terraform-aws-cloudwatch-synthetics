@@ -13,7 +13,7 @@ variable "topic_name_suffix" {
 
 variable "repository" {
   type        = string
-  default     = "https://github.com/clouddrove/terraform-aws-cloudwatch-alarms"
+  default     = "https://github.com/binbashar/terraform-aws-cloudwatch-synthetics"
   description = "Terraform current module repo"
 
   validation {
@@ -37,7 +37,7 @@ variable "label_order" {
 
 variable "managedby" {
   type        = string
-  default     = "hello@clouddrove.com"
+  default     = "managedby@binbash.co"
   description = "ManagedBy, eg 'CloudDrove'."
 }
 
