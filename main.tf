@@ -198,7 +198,7 @@ resource "aws_sns_topic" "canary_alarm" {
 
 resource "aws_sns_topic_subscription" "canary_alarm" {
   count     = var.alarm_email == null ? 0 : 1
-  topic_arn = aws_sns_topic.canary_alarm.arn
+  topic_arn = local.alarm_topic_arn
   protocol  = "email"
   endpoint  = var.alarm_email
 }
