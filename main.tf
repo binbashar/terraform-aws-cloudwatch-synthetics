@@ -48,7 +48,7 @@ resource "aws_synthetics_canary" "canary" {
   execution_role_arn   = aws_iam_role.canary_role.arn
   handler              = "pageLoadBlueprint.handler"
   zip_file             = "/tmp/${each.key}-${md5(local.file_content[each.key])}.zip"
-  runtime_version      = "syn-nodejs-puppeteer-6.2"
+  runtime_version      = var.runtime_version
   start_canary         = true
   tags                 = module.labels.tags
 
@@ -187,12 +187,13 @@ resource "aws_cloudwatch_metric_alarm" "canary_alarm" {
   alarm_description = "Canary alarm for ${each.key}"
 
   alarm_actions = [
-    aws_sns_topic.canary_alarm.arn
+    local.alarm_topic_arn
   ]
 }
 
 resource "aws_sns_topic" "canary_alarm" {
-  name = "${var.name_prefix}-${var.topic_name_suffix}"
+  count     = var.create_topic == null ? 0 : 1
+  name      = "${var.name_prefix}-${var.topic_name_suffix}"
 }
 
 resource "aws_sns_topic_subscription" "canary_alarm" {

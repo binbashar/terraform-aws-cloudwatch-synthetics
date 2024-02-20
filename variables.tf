@@ -81,3 +81,21 @@ variable "tags" {
   type        = map(string)
   description = "The tags"
 }
+
+variable "runtime_version" {
+  default     = "syn-nodejs-puppeteer-6.2"
+  type        = string
+  description = "The runtime version"
+}
+
+variable "create_topic" {
+  default     = true
+  type        = bool
+  description = "Whether or not create the topic"
+}
+
+variable "existent_topic_arn" {
+  default     = ""
+  type        = "string"
+  description = "The arn of the already existent topic to use if `create_topic` is `false`"
+}
