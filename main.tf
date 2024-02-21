@@ -192,7 +192,7 @@ resource "aws_cloudwatch_metric_alarm" "canary_alarm" {
 }
 
 resource "aws_sns_topic" "canary_alarm" {
-  count     = var.create_topic == null ? 0 : 1
+  count     = var.create_topic == false ? 0 : 1
   name      = "${var.name_prefix}-${var.topic_name_suffix}"
 }
 
