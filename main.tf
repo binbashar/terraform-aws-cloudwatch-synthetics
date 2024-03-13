@@ -25,7 +25,8 @@ module "labels" {
 locals {
   file_content = { for k, v in var.endpoints :
     k => templatefile("${path.module}/canary-lambda.js.tpl", {
-      endpoint = v.url
+      endpoint = v.url,
+      bucket = "s3://${var.s3_artifact_bucket}/${each.key}"
     })
   }
 }
