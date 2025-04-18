@@ -1,3 +1,8 @@
+//
+// ROADMAP
+//  * Make the timeouts configurable via environment variables
+//  * Make this script overridable so users can define their own workflows
+//
 var synthetics = require('Synthetics');
 const log = require('SyntheticsLogger');
 
@@ -7,10 +12,15 @@ const pageLoadBlueprint = async function () {
 
     let page = await synthetics.getPage();
     const response = await page.goto(URL, {waitUntil: 'domcontentloaded', timeout: 30000});
-    //Wait for page to render.
-    //Increase or decrease wait time based on endpoint being monitored.
-    await page.waitForTimeout(15000);
+
+    // If you really want to take an screenshot of the target webpage, and such webpage
+    // uses a front-end that needs some time to be rendered, then you may need to
+    // give it some time to complete before you capture it.
+    // Keep in mind that the following line was commented because it was failing on
+    // versions 9.1 and 10.0 of the runtime.
+    //await page.waitForTimeout(15000);
     await synthetics.takeScreenshot('loaded', 'loaded');
+
     let pageTitle = await page.title();
     log.info('Page title: ' + pageTitle);
     if (response.status() !== 200) {
