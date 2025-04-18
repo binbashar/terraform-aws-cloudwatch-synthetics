@@ -68,66 +68,68 @@ This table contains both Prerequisites and Providers:
 
 ## Examples
 
-**IMPORTANT:** Since the master branch used in source varies based on new modifications, we recommend using the [release versions](https://github.com/clouddrove/terraform-aws-cloudwatch-alarms/releases).
-
 📌 For additional usage examples, check the complete list under [`examples/`](./examples) directory.
 
+Here are some examples of how you can use this module in your inventory structure:
+### Basic Example
+```hcl
+  module "target-canary" {
+    source = "git::https://github.com/binbashar/terraform-aws-cloudwatch-synthetics.git?ref=FEATURE/improving-module"
+  
+    name_prefix = "canary"
+    environment = "test"
+  
+    schedule_expression = "rate(5 minutes)"
+    s3_artifact_bucket  = "my-test-artifact-bucket" # must pre-exist
+    alarm_email         = null      # an email or null value
+    endpoints           = { "target-group" = { url = "http://www.binbash.co/" } }
+    managedby           = "managedby@binbash.co"
+    repository          = "https://github.com/binbashar/terraform-aws-cloudwatch-synthetics"
+  
+    # what networks it has to work in?
+    subnet_ids                = data.terraform_remote_state.local-vpcs.outputs.private_subnets
+    security_group_ids        = [aws_security_group.target-canary-sg.id]
+  
+    tags = local.tags
+  
+    depends_on = [module.target_canary_s3_bucket, aws_security_group.target-canary-sg]
+  }
+```
 
-
-## Inputs and Outputs
-
-Refer to complete documentation: [here](docs/io.md)
-
-
-<!-- 
-## Module Dependencies
-
-This module has dependencies on:
-
-- [Labels Module](https://github.com/clouddrove/terraform-aws-labels): Provides resource tagging.
-- [Security Groups Module](https://github.com/clouddrove/terraform-aws-security-group): Manage security groups
-- [KMS Module](https://github.com/clouddrove/terraform-aws-kms): Manage resource encryption
-
-
- -->
-
-
-## Module Dependencies
-
-This module has dependencies on:
-- [Labels Module](https://github.com/clouddrove/terraform-aws-labels): Provides resource tagging.
-
-
-## 📑 Changelog
-
-Refer [here](CHANGELOG.md).
-
-
-
-
-## ✨ Contributors
-
-Big thanks to our contributors for elevating our project with their dedication and expertise! But, we do not wish to stop there, would like to invite contributions from the community in improving these projects and making them more versatile for better reach. Remember, every bit of contribution is immensely valuable, as, together, we are moving in only 1 direction, i.e. forward. 
-
-<a href="https://github.com/clouddrove/terraform-aws-cloudwatch-alarms/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=clouddrove/terraform-aws-cloudwatch-alarms&max" />
-</a>
-<br>
-<br>
-
- If you're considering contributing to our project, here are a few quick guidelines that we have been following (Got a suggestion? We are all ears!):
-
-- **Fork the Repository:** Create a new branch for your feature or bug fix.
-- **Coding Standards:** You know the drill.
-- **Clear Commit Messages:** Write clear and concise commit messages to facilitate understanding.
-- **Thorough Testing:** Test your changes thoroughly before submitting a pull request.
-- **Documentation Updates:** Include relevant documentation updates if your changes impact it.
+**Note it is using FEATURE/improving-module branch while in development.**
 
 
 
 
 
 
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| alarm\_email | Email address to send alarms to | `string` | n/a | yes |
+| create\_topic | Whether or not create the topic, topic_name_suffix required if `false` | `bool` | `true` | yes |
+| endpoints | n/a | <pre>map(object({<br>    url = string<br>  }))</pre> | n/a | yes |
+| environment | Environment (e.g. `prod`, `dev`, `staging`). | `string` | `""` | no |
+| existent\_topic\_arn | If create_topic is `false` this is required and is the arn of an already existent topic | `string` | n/a | no |
+| label\_order | Label order, e.g. `name`,`application`. | `list(any)` | `[]` | no |
+| managedby | ManagedBy, eg 'CloudDrove'. | `string` | `"managedby@binbash.co"` | no |
+| name | Name  (e.g. `app` or `cluster`). | `string` | `""` | no |
+| repository | Terraform current module repo | `string` | `"https://github.com/binbashar/terraform-aws-cloudwatch-synthetics"` | no |
+| runtime_version | Runtime version for the lambda. | `string` | `syn-nodejs-puppeteer-6.2` | no |
+| s3\_artifact\_bucket | Location in Amazon S3 where Synthetics stores artifacts from the test runs of this canary | `string` | n/a | yes |
+| schedule\_expression | Expression defining how often the canary runs | `string` | n/a | yes |
+| security\_group\_ids | IDs of the security groups for this canary | `list(string)` | `null` | no |
+| subnet\_ids | IDs of the subnets where this canary is to run | `list(string)` | `null` | no |
+| topic\_name\_suffix | Topic name suffix, will be prepended with name_prefix | `string` | n/a | yes |
+| tags | The json object with tags to be added to resources | `map(string)` | n/a | yes |
+
+
+## Outputs
+
+| Name | Description | 
+|------|-------------|
+| topic_arn | The ARN for the alarm topic (whether it is created or already existent, see `create_topic` input) |
 
 
 

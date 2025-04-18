@@ -1,14 +1,19 @@
 #Module      : LABEL
 #Description : Terraform label module variables.
-variable "name" {
+variable "name_prefix" {
   type        = string
-  default     = ""
   description = "Name  (e.g. `app` or `cluster`)."
+}
+
+variable "topic_name_suffix" {
+  default     = "canary-topic"
+  type        = string
+  description = "The name for the SNS Topic suffix (will be name-topic_name_suffix)"
 }
 
 variable "repository" {
   type        = string
-  default     = "https://github.com/clouddrove/terraform-aws-cloudwatch-alarms"
+  default     = "https://github.com/binbashar/terraform-aws-cloudwatch-synthetics"
   description = "Terraform current module repo"
 
   validation {
@@ -32,7 +37,7 @@ variable "label_order" {
 
 variable "managedby" {
   type        = string
-  default     = "hello@clouddrove.com"
+  default     = "managedby@binbash.co"
   description = "ManagedBy, eg 'CloudDrove'."
 }
 
@@ -70,4 +75,27 @@ variable "security_group_ids" {
   default     = null
   type        = list(string)
   description = "IDs of the security groups for this canary"
+}
+
+variable "tags" {
+  type        = map(string)
+  description = "The tags"
+}
+
+variable "runtime_version" {
+  default     = "syn-nodejs-puppeteer-6.2"
+  type        = string
+  description = "The runtime version"
+}
+
+variable "create_topic" {
+  default     = true
+  type        = bool
+  description = "Whether or not create the topic"
+}
+
+variable "existent_topic_arn" {
+  default     = ""
+  type        = string
+  description = "The arn of the already existent topic to use if `create_topic` is `false`"
 }
