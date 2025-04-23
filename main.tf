@@ -178,7 +178,7 @@ resource "aws_cloudwatch_metric_alarm" "canary_alarm" {
   period              = "60" # 1 minute
   statistic           = "Sum"
   threshold           = "1"
-  treat_missing_data  = "notBreaching"
+  treat_missing_data  = var.cloudwatch_alarm_missing_data
 
   dimensions = {
     CanaryName = aws_synthetics_canary.canary[each.key].name

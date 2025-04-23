@@ -99,3 +99,13 @@ variable "existent_topic_arn" {
   type        = string
   description = "The arn of the already existent topic to use if `create_topic` is `false`"
 }
+
+variable "cloudwatch_alarm_missing_data" {
+  default     = "notBreaching"
+  type        = string
+  description = "Sets how the alarm is to handle missing data points. The following values are supported: missing, ignore, breaching and notBreaching."
+  validation {
+    condition     = contains(["missing", "ignore", "breaching", "notBreaching"], var.cloudwatch_alarm_missing_data)
+    error_message = "cloudwatch_alarm_missing_data must be one of: missing, ignore, breaching, notBreaching."
+  }  
+}
