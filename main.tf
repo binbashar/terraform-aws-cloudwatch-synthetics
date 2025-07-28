@@ -189,6 +189,10 @@ resource "aws_cloudwatch_metric_alarm" "canary_alarm" {
   alarm_actions = [
     local.alarm_topic_arn
   ]
+
+  ok_actions = [
+    local.alarm_topic_arn
+  ]
 }
 
 resource "aws_sns_topic" "canary_alarm" {
