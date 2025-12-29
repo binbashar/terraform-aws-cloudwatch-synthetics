@@ -75,28 +75,100 @@ Here are some examples of how you can use this module in your inventory structur
 ```hcl
   module "target-canary" {
     source = "git::https://github.com/binbashar/terraform-aws-cloudwatch-synthetics.git?ref=FEATURE/improving-module"
-  
+
     name_prefix = "canary"
     environment = "test"
-  
+
     schedule_expression = "rate(5 minutes)"
     s3_artifact_bucket  = "my-test-artifact-bucket" # must pre-exist
     alarm_email         = null      # an email or null value
-    endpoints           = { "target-group" = { url = "http://www.binbash.co/" } }
+    endpoints           = {
+      "target-group" = {
+        url = "http://www.binbash.co/"
+        headers = {
+          "User-Agent" = "CustomCanary/1.0"
+          "X-Custom-Header" = "CustomValue"
+        }
+      }
+    }
     managedby           = "managedby@binbash.co"
     repository          = "https://github.com/binbashar/terraform-aws-cloudwatch-synthetics"
-  
+
     # what networks it has to work in?
     subnet_ids                = data.terraform_remote_state.local-vpcs.outputs.private_subnets
     security_group_ids        = [aws_security_group.target-canary-sg.id]
-  
+
     tags = local.tags
-  
+
     depends_on = [module.target_canary_s3_bucket, aws_security_group.target-canary-sg]
   }
 ```
 
+### Example with Basic Authentication
+```hcl
+  # Define sensitive credentials in a separate .tfvars file (e.g., secrets.auto.tfvars)
+  # DO NOT commit this file to version control - add it to .gitignore
+
+  # In your main configuration:
+  module "protected-canary" {
+    source = "git::https://github.com/binbashar/terraform-aws-cloudwatch-synthetics.git?ref=FEATURE/improving-module"
+
+    name_prefix = "protected-canary"
+    environment = "prod"
+
+    schedule_expression = "rate(5 minutes)"
+    s3_artifact_bucket  = "my-prod-artifact-bucket"
+    alarm_email         = "alerts@example.com"
+
+    endpoints = {
+      "api-endpoint" = {
+        url = "https://api.example.com/health"
+        headers = {
+          "Authorization" = "Basic ${base64encode("${var.basic_auth_username}:${var.basic_auth_password}")}"
+          "User-Agent"    = "HealthCheckCanary/1.0"
+        }
+      }
+    }
+
+    subnet_ids         = data.terraform_remote_state.local-vpcs.outputs.private_subnets
+    security_group_ids = [aws_security_group.protected-canary-sg.id]
+
+    tags = local.tags
+  }
+
+  # In variables.tf:
+  variable "basic_auth_username" {
+    type      = string
+    sensitive = true
+  }
+
+  variable "basic_auth_password" {
+    type      = string
+    sensitive = true
+  }
+
+  # In secrets.auto.tfvars (add to .gitignore):
+  # basic_auth_username = "your-username"
+  # basic_auth_password = "your-password"
+```
+
 **Note it is using FEATURE/improving-module branch while in development.**
+
+## Security Best Practices for Headers
+
+When using headers with sensitive data (like Authorization headers for Basic Auth):
+
+1. **Use Terraform variables** marked as `sensitive = true` for credentials
+2. **Store credentials in `.tfvars` files** that are excluded from version control (add to `.gitignore`)
+3. **Use environment variables** or a secrets management solution (e.g., Terraform Cloud/Enterprise variables, AWS Parameter Store)
+4. **Never hardcode credentials** directly in your `.tf` files
+5. **Leverage `base64encode()`** function for Basic Auth: `"Basic ${base64encode("username:password")}"`
+6. **The `endpoints` variable is marked sensitive** to prevent credentials from appearing in Terraform logs
+
+**Note:** Credentials will still appear in the Terraform state file, which should be:
+- Encrypted at rest (use S3 with encryption for remote state)
+- Access-controlled (limit who can read the state file)
+- Never committed to version control
 
 
 
@@ -109,7 +181,7 @@ Here are some examples of how you can use this module in your inventory structur
 |------|-------------|------|---------|:--------:|
 | alarm\_email | Email address to send alarms to | `string` | n/a | yes |
 | create\_topic | Whether or not create the topic, topic_name_suffix required if `false` | `bool` | `true` | yes |
-| endpoints | n/a | <pre>map(object({<br>    url = string<br>  }))</pre> | n/a | yes |
+| endpoints | Map of endpoints to monitor. Each endpoint requires a url and optionally can include custom headers (including Authorization for Basic Auth). This variable is marked sensitive to protect credentials. | <pre>map(object({<br>    url = string<br>    headers = optional(map(string), {})<br>  }))</pre> | n/a | yes |
 | environment | Environment (e.g. `prod`, `dev`, `staging`). | `string` | `""` | no |
 | existent\_topic\_arn | If create_topic is `false` this is required and is the arn of an already existent topic | `string` | n/a | no |
 | label\_order | Label order, e.g. `name`,`application`. | `list(any)` | `[]` | no |

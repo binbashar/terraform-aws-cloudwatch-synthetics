@@ -10,8 +10,15 @@ const log = require('SyntheticsLogger');
 const pageLoadBlueprint = async function () {
 
     const URL = "${endpoint}";
+    const HEADERS = ${headers_json};
 
     let page = await synthetics.getPage();
+
+    // Set custom headers if provided
+    if (Object.keys(HEADERS).length > 0) {
+        await page.setExtraHTTPHeaders(HEADERS);
+    }
+
     const response = await page.goto(URL, {waitUntil: 'domcontentloaded', timeout: 30000});
 
     // If you really want to take an screenshot of the target webpage, and such webpage

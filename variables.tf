@@ -56,8 +56,21 @@ variable "schedule_expression" {
 
 variable "endpoints" {
   type = map(object({
-    url = string
+    url     = string
+    headers = optional(map(string), {})
   }))
+  sensitive   = true
+  description = <<-EOT
+    Map of endpoints to monitor. Each endpoint supports:
+    - url: The URL to monitor (required)
+    - headers: Headers as key-value pairs, including sensitive ones like Authorization (optional)
+
+    This variable is marked as sensitive to protect credentials in logs.
+    For Basic Auth, encode credentials and use:
+    headers = {
+      "Authorization" = "Basic ${base64encode("username:password")}"
+    }
+  EOT
 }
 
 variable "alarm_email" {

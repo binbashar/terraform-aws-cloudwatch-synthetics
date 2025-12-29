@@ -16,7 +16,7 @@ module "labels" {
   managedby   = var.managedby
   label_order = var.label_order
 
-  extra_tags        = var.tags
+  extra_tags = var.tags
 }
 
 #Module      : CLOUDWATCH SYNTHETIC CANARY 
@@ -25,7 +25,8 @@ module "labels" {
 locals {
   file_content = { for k, v in var.endpoints :
     k => templatefile("${path.module}/canary-lambda.js.tpl", {
-      endpoint = v.url
+      endpoint     = v.url
+      headers_json = jsonencode(v.headers)
     })
   }
 }
@@ -196,8 +197,8 @@ resource "aws_cloudwatch_metric_alarm" "canary_alarm" {
 }
 
 resource "aws_sns_topic" "canary_alarm" {
-  count     = var.create_topic == false ? 0 : 1
-  name      = "${var.name_prefix}-${var.topic_name_suffix}"
+  count = var.create_topic == false ? 0 : 1
+  name  = "${var.name_prefix}-${var.topic_name_suffix}"
 }
 
 resource "aws_sns_topic_subscription" "canary_alarm" {
